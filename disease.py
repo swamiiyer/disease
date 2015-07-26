@@ -87,10 +87,10 @@ def extend(a, b):
 
 def single_trial(G, params):
     """
-    Carry out a single trial of the disease dynamics and return two lists 
-    containing the fraction of susceptible and infected individuals at each 
-    time step if params["verbose"] is "True", and the values at the last 
-    time step otherwise..
+    Carry out a single trial of the disease dynamics and return three lists 
+    containing the fraction of susceptible, infected, and recovered 
+    individuals at each time step if params["verbose"] is "True", and the 
+    values at the last time step otherwise..
     """
 
     # Pick a random value from (0, 1) for beta and gamma if they are None.
@@ -109,7 +109,7 @@ def single_trial(G, params):
         vaccination = getattr(disease, strategy)
         v = vaccination(G, population, fraction)
 
-    # Infect one susceptible individual at random.
+    # Infect one susceptible individual at random. 
     while True:
         p = random.randint(0, n - 1)
         if population[p] == SUSCEPTIBLE:
@@ -118,8 +118,9 @@ def single_trial(G, params):
 
     S = numpy.array([n - v - 1], dtype = float)
     I = numpy.array([1], dtype = float)
+    R = numpy.array([0], dtype = float)
     while True:
-        s, i = S[-1], I[-1]
+        s, i, r = S[-1], I[-1], R[-1]
         if i == 0:
             break
         for count in range(1, n + 1):
@@ -134,14 +135,16 @@ def single_trial(G, params):
                 if random.random() < gamma:
                     population[idx] = RECOVERED
                     i -= 1
+                    r += 1
             elif population[idx] == RECOVERED:
                 pass
             else:
                 pass
         S = numpy.append(S, s)
         I = numpy.append(I, i)
-    return (S / n, I / n) if params["verbose"] == "True" \
-        else (S[-1:] / n, I[-1:] / n)
+        R = numpy.append(R, r)
+    return (S / n, I / n, R / n) if params["verbose"] == "True" \
+        else (S[-1:] / n, I[-1:] / n, R[-1:] / n)
 
 def main(args):
     """
@@ -164,8 +167,7 @@ def main(args):
     # compute basic statistics of the results.
     Sm, Im, Rm = numpy.array([0.0]), numpy.array([0.0]), numpy.array([0.0])
     for t in range(1, params["trials"] + 1):
-        S, I = single_trial(G, params)
-        R = 1.0 - S - I
+        S, I, R = single_trial(G, params)
         if params["verbose"] == "True":
             Sm, S = extend(Sm, S)
             Im, I = extend(Im, I)
@@ -175,7 +177,7 @@ def main(args):
         Rm += (R - Rm) / t
 
     # Print the averaged results to STDOUT.
-    for i in range(len(S)):
+    for i in range(len(Sm)):
         print "%.3f\t%.3f\t%.3f" %(Sm[i], Im[i], Rm[i])
 
 if __name__ == "__main__":
