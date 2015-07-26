@@ -7,20 +7,20 @@ def main(args):
     the results produced by disease.py (names of the result files are 
     fed via STDIN) and saves the plot in a file called prevalence.pdf.
     """
-    x = pylab.arange(0, 1.0, 0.01)
-    r = []
+    V = pylab.arange(0, 1.0, 0.01)
+    R = []
     lines = sys.stdin.readlines()
     for line in lines:
         data = pandas.read_table(line.strip(), header = 0)
         tail = data.tail(1).values[0]
-        r.append(round(tail[2], 3))
-    auc = sum([0.01 * i for i in r])
+        R.append(round(tail[2], 3))
+    auc = sum([0.01 * r for r in R])
     print("%.3f" %(auc))
     font_prop = font_manager.FontProperties(size = 12)
     pylab.figure(1, figsize = (7, 4.5), dpi = 500)
     pylab.xlabel(r"fraction vaccinated $v$", fontproperties = font_prop)
     pylab.ylabel(r"prevalence $r_\infty$", fontproperties = font_prop)
-    pylab.plot(x, r, "k-", linewidth = 2, alpha = 0.6)
+    pylab.plot(X, R, "k-", linewidth = 2, alpha = 0.6)
     pylab.xlim(0, 1.0)
     pylab.ylim(0, 1.0)
     pylab.figtext(0.82, 0.85, r"$\Pi = %.3f$" \

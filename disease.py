@@ -89,7 +89,8 @@ def single_trial(G, params):
     """
     Carry out a single trial of the disease dynamics and return two lists 
     containing the fraction of susceptible and infected individuals at each 
-    time step.
+    time step if params["verbose"] is "True", and the values at the last 
+    time step otherwise..
     """
 
     # Pick a random value from (0, 1) for beta and gamma if they are None.
@@ -139,7 +140,8 @@ def single_trial(G, params):
                 pass
         S = numpy.append(S, s)
         I = numpy.append(I, i)
-    return S / n, I / n
+    return (S / n, I / n) if params["verbose"] == "True" \
+        else (S[-1:] / n, I[-1:] / n)
 
 def main(args):
     """
@@ -159,25 +161,22 @@ def main(args):
     G = getattr(networkx, network_params["name"])(**network_params["args"])
 
     # Carry out the requested number of trials of the disease dynamics and 
-    # average the results.
-    S, I = numpy.array([0.0]), numpy.array([0.0])
-    for t in range(params["trials"]):
-        S_t, I_t = single_trial(G, params)
+    # compute basic statistics of the results.
+    Sm, Im, Rm = numpy.array([0.0]), numpy.array([0.0]), numpy.array([0.0])
+    for t in range(1, params["trials"] + 1):
+        S, I = single_trial(G, params)
+        R = 1.0 - S - I
         if params["verbose"] == "True":
-            S, S_t = extend(S, S_t)
-            I, I_t = extend(I, I_t)
-            S += S_t
-            I += I_t
-        else:
-            S += S_t[-1]
-            I += I_t[-1]
-    S /= params["trials"]
-    I /= params["trials"]
-    R = 1.0 - S - I
+            Sm, S = extend(Sm, S)
+            Im, I = extend(Im, I)
+            Rm, R = extend(Rm, R)
+        Sm += (S - Sm) / t
+        Im += (I - Im) / t
+        Rm += (R - Rm) / t
 
     # Print the averaged results to STDOUT.
     for i in range(len(S)):
-        print "%.3f\t%.3f\t%.3f" %(S[i], I[i], R[i])
+        print "%.3f\t%.3f\t%.3f" %(Sm[i], Im[i], Rm[i])
 
 if __name__ == "__main__":
     main(sys.argv[1:])
