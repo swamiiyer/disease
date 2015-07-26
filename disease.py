@@ -72,25 +72,10 @@ def infection_probability(G, population, i, beta):
     infected_neighbors = numpy.in1d(population[neighbors(G, i)], INFECTED).sum()
     return 1 - (1 - beta) ** infected_neighbors
 
-def extend(a, b):
-    """
-    Extend the smaller list to the size of the larger, using the last 
-    element of the smaller list.
-    """
-    a_size = len(a)
-    b_size = len(b)
-    if a_size < b_size:
-        a = numpy.append(a, [a[-1]] * (b_size - a_size))
-    elif a_size > b_size:
-        b = numpy.append(b, [b[-1]] * (a_size - b_size))
-    return a, b
-
 def single_trial(G, params):
     """
-    Carry out a single trial of the disease dynamics and return three lists 
-    containing the fraction of susceptible, infected, and recovered 
-    individuals at each time step if params["verbose"] is "True", and the 
-    values at the last time step otherwise..
+    Carry out a single trial of the disease dynamics and return the fraction 
+    of susceptible, infected, and recovered individuals at the last time step.
     """
 
     # Pick a random value from (0, 1) for beta and gamma if they are None.
@@ -116,12 +101,9 @@ def single_trial(G, params):
             population[p] = INFECTED
             break
 
-    S = numpy.array([n - v - 1], dtype = float)
-    I = numpy.array([1], dtype = float)
-    R = numpy.array([0], dtype = float)
+    S, I, R = n - v - 1, 1, 0
     while True:
-        s, i, r = S[-1], I[-1], R[-1]
-        if i == 0:
+        if I == 0:
             break
         for count in range(1, n + 1):
             idx = random.randint(0, n - 1)
@@ -129,22 +111,18 @@ def single_trial(G, params):
                 p = infection_probability(G, population, idx, beta)
                 if random.random() < p:
                     population[idx] = INFECTED
-                    s -= 1
-                    i += 1
+                    S -= 1
+                    I += 1
             elif population[idx] == INFECTED:
                 if random.random() < gamma:
                     population[idx] = RECOVERED
-                    i -= 1
-                    r += 1
+                    I -= 1
+                    R += 1
             elif population[idx] == RECOVERED:
                 pass
             else:
                 pass
-        S = numpy.append(S, s)
-        I = numpy.append(I, i)
-        R = numpy.append(R, r)
-    return (S / n, I / n, R / n) if params["verbose"] == "True" \
-        else (S[-1:] / n, I[-1:] / n, R[-1:] / n)
+    return 1.0 * S / n, 1.0 * I / n, 1.0 * R / n
 
 def main(args):
     """
@@ -164,21 +142,16 @@ def main(args):
     G = getattr(networkx, network_params["name"])(**network_params["args"])
 
     # Carry out the requested number of trials of the disease dynamics and 
-    # compute basic statistics of the results.
-    Sm, Im, Rm = numpy.array([0.0]), numpy.array([0.0]), numpy.array([0.0])
+    # average the results.
+    Sm, Im, Rm = 0.0, 0.0, 0.0
     for t in range(1, params["trials"] + 1):
         S, I, R = single_trial(G, params)
-        if params["verbose"] == "True":
-            Sm, S = extend(Sm, S)
-            Im, I = extend(Im, I)
-            Rm, R = extend(Rm, R)
         Sm += (S - Sm) / t
         Im += (I - Im) / t
         Rm += (R - Rm) / t
 
     # Print the averaged results to STDOUT.
-    for i in range(len(Sm)):
-        print "%.3f\t%.3f\t%.3f" %(Sm[i], Im[i], Rm[i])
+    print "%.3f\t%.3f\t%.3f" %(Sm, Im, Rm)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
