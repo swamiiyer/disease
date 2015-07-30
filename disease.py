@@ -120,7 +120,7 @@ def single_trial(G, params):
                     R += 1
             elif population[idx] == RECOVERED:
                 pass
-            else:
+            elif population[idx] == VACCINATED:
                 pass
     return 1.0 * S / n, 1.0 * I / n, 1.0 * R / n
 
@@ -143,15 +143,18 @@ def main(args):
 
     # Carry out the requested number of trials of the disease dynamics and 
     # average the results.
-    Sm, Im, Rm = 0.0, 0.0, 0.0
+    Sm, Im, Rm, Rv = 0.0, 0.0, 0.0, 0.0
     for t in range(1, params["trials"] + 1):
         S, I, R = single_trial(G, params)
+        Rm_prev = Rm
         Sm += (S - Sm) / t
         Im += (I - Im) / t
         Rm += (R - Rm) / t
+        Rv += (R - Rm) * (R - Rm_prev)
 
-    # Print the averaged results to STDOUT.
-    print "%.3f\t%.3f\t%.3f" %(Sm, Im, Rm)
+    # Print the average
+    print("%.3f\t%.3f\t%.3f\t%.3f" \
+          %(Sm, Im, Rm, (Rv / params["trials"]) ** 0.5))
 
 if __name__ == "__main__":
     main(sys.argv[1:])

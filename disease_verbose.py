@@ -137,7 +137,7 @@ def single_trial(G, params):
                     r += 1
             elif population[idx] == RECOVERED:
                 pass
-            else:
+            elif population[idx] == VACCINATED:
                 pass
         S = numpy.append(S, s)
         I = numpy.append(I, i)
