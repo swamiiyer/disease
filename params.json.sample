@@ -1,0 +1,8 @@
+{
+    "trials" : 100, 
+    "beta"  : 0.08, 
+    "gamma" : 0.075, 
+    "vaccination" : {"strategy" : "random_vaccination", "fraction" : 0.1}, 
+    "network_params" : {"name" : "barabasi_albert_graph", 
+                        "args" : {"n" : 10000, "m" : 5}}
+}
