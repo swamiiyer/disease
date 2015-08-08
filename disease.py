@@ -135,11 +135,14 @@ def main(args):
     # Load the simulation parameters.
     params = json.load((open(args[0], "r")))
     network_params = params["network_params"]
-    if network_params["name"] == "read_graphml":
-        network_params["args"]["node_type"] = int
 
     # Setup the network.
-    G = getattr(networkx, network_params["name"])(**network_params["args"])
+    if network_params["name"] == "read_graphml":
+        G = networkx.convert_node_labels_to_integers(\
+            networkx.read_graphml(network_params["args"]["path"]))
+    else:
+        G = getattr(networkx, \
+                        network_params["name"])(**network_params["args"])
 
     # Carry out the requested number of trials of the disease dynamics and 
     # average the results.
