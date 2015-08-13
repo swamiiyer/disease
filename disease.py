@@ -22,7 +22,8 @@ def random_neighbor(G, i):
     """
     Return a random neighbor of vertex i in G.
     """
-    return random.choice(neighbors(G, i))
+    l = neighbors(G, i)
+    return random.choice(l) if len(l) > 0 else None
 
 def random_vaccination(G, population, fraction):
     """
@@ -59,6 +60,8 @@ def referral_vaccination(G, population, fraction):
     for i in range(int(fraction * len(population))):
         p = random_vertex(G)
         q = random_neighbor(G, p)
+        if q == None:
+            continue
         if population[q] != VACCINATED:
             population[q] = VACCINATED
             v += 1
