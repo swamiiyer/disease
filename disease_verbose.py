@@ -38,17 +38,20 @@ def random_vaccination(G, population, fraction):
             v += 1
     return v
 
-def degree_vaccination(G, population, fraction):
+def random_walk_vaccination(G, population, fraction):
     """
-    Try to vaccinate a specified fraction of the population in reverse order 
-    of degree and return the number of vaccinations actually administered.
+    Starting at a random vertex perform a random walk on the graph G, 
+    vaccinate each vertex visited until the specified fraction of individuals 
+    have been vaccinated, and return the number of vaccinations administered.
     """
-    v = 0
-    L = sorted(networkx.degree_centrality(G).items(), 
-               key = operator.itemgetter(1), reverse = True)
-    for i in range(int(fraction * len(population))):
-        population[L[i][0]] = VACCINATED
-        v += 1
+    v = int(fraction * len(population))
+    count = 0
+    p = random_vertex(G)
+    while count < v:
+        if population[p] != VACCINATED:
+            population[p] = VACCINATED
+            count += 1
+        p = random_neighbor(G, p)
     return v
 
 def referral_vaccination(G, population, fraction):
@@ -65,6 +68,62 @@ def referral_vaccination(G, population, fraction):
         if population[q] != VACCINATED:
             population[q] = VACCINATED
             v += 1
+    return v
+
+def betweenness_vaccination(G, population, fraction):
+    """
+    Try to vaccinate a specified fraction of the population in reverse order 
+    of betweenness centrality and return the number of vaccinations actually 
+    administered.
+    """
+    v = 0
+    L = sorted(networkx.betweenness_centrality(G).items(), 
+               key = operator.itemgetter(1), reverse = True)
+    for i in range(int(fraction * len(population))):
+        population[L[i][0]] = VACCINATED
+        v += 1
+    return v
+
+def closeness_vaccination(G, population, fraction):
+    """
+    Try to vaccinate a specified fraction of the population in reverse order 
+    of closeness centrality and return the number of vaccinations actually 
+    administered.
+    """
+    v = 0
+    L = sorted(networkx.closeness_centrality(G).items(), 
+               key = operator.itemgetter(1), reverse = True)
+    for i in range(int(fraction * len(population))):
+        population[L[i][0]] = VACCINATED
+        v += 1
+    return v
+
+def degree_vaccination(G, population, fraction):
+    """
+    Try to vaccinate a specified fraction of the population in reverse order 
+    of degree centrality and return the number of vaccinations actually 
+    administered.
+    """
+    v = 0
+    L = sorted(networkx.degree_centrality(G).items(), 
+               key = operator.itemgetter(1), reverse = True)
+    for i in range(int(fraction * len(population))):
+        population[L[i][0]] = VACCINATED
+        v += 1
+    return v
+
+def eigenvector_vaccination(G, population, fraction):
+    """
+    Try to vaccinate a specified fraction of the population in reverse order 
+    of eigenvector centrality and return the number of vaccinations actually 
+    administered.
+    """
+    v = 0
+    L = sorted(networkx.eigenvector_centrality(G).items(), 
+               key = operator.itemgetter(1), reverse = True)
+    for i in range(int(fraction * len(population))):
+        population[L[i][0]] = VACCINATED
+        v += 1
     return v
 
 def infection_probability(G, population, i, beta):
