@@ -17,7 +17,14 @@ def main(args):
         R.append(round(tail[2], 3))
         Rerr.append(round(tail[3], 3))
     auc = sum([0.01 * r for r in R])
-    print("%.3f" %(auc))
+    print("%.3f" %(auc))   # P-index
+    epsilon = 1e-2
+    vstar = 0.0
+    for x in R:
+        if x > epsilon:
+            vstar += 0.01
+    print("%.3f" %(vstar)) # critical vaccination threshold, vstar
+
     font_prop = font_manager.FontProperties(size = 12)
     pylab.figure(1, figsize = (7, 4.5), dpi = 500)
     pylab.xlabel(r"fraction vaccinated $v$", fontproperties = font_prop)
@@ -26,8 +33,8 @@ def main(args):
     pylab.plot(V, R, "k-", linewidth = 2, alpha = 0.6)
     pylab.xlim(0, 1.0)
     pylab.ylim(0, 1.0)
-    pylab.figtext(0.82, 0.85, r"$\Pi = %.3f$" \
-                  %(auc), ha = 'center', va = 'center', 
+    pylab.figtext(0.75, 0.85, r"$\Pi = %.3f, v^\star = %.3f$" \
+                  %(auc, vstar), ha = 'center', va = 'center', 
                   bbox = dict(facecolor = 'white', edgecolor = 'black'))
     pylab.savefig("prevalence.pdf", format = "pdf", bbox_inches = "tight")
     pylab.close(1)
