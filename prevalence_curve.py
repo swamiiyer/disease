@@ -5,7 +5,9 @@ def main(args):
     """
     Plots the prevalence curve (prevalence versus fraction vaccinated) from 
     the results produced by disease.py (names of the result files are 
-    fed via STDIN) and saves the plot in a file called prevalence.pdf.
+    fed via STDIN) and saves the plot in a file called prevalence.pdf. 
+    The script also calculates and prints the `P-index` value and the critical 
+    vaccination threshold value, `vstar`.
     """
     V = pylab.arange(0, 1.0, 0.01)
     R = []
