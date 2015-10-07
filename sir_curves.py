@@ -3,7 +3,7 @@ import matplotlib.font_manager as font_manager
 
 def main(args):
     """
-    Plots the s-i-r curves from the results produced by disease.py (fed 
+    Plots the s-i-r curves from the results produced by disease_verbose.py (fed 
     via STDIN) and saves the plot in a file called sir.pdf.
     """
     data = pandas.read_table(sys.stdin, header = None)
