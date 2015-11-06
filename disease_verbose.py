@@ -38,7 +38,7 @@ def random_walk_vaccination(G, population, v):
     random walk on the largest component (size n) of the graph G, starting 
     at a random vertex.
     """
-    Gsub = networkx.connected_component_subgraphs(G)[0]
+    Gsub = networkx.connected_component_subgraphs(G).next()
     v = min(len(Gsub), v)
     count = 0
     p = random_vertex(Gsub)
