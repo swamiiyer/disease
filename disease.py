@@ -6,6 +6,10 @@ INFECTED = 1
 RECOVERED = 2
 VACCINATED = 3
 
+# Memoize betweenness, closeness, degree, and eigenvector centrality
+# calculations
+BET, CLO, DEG, EIG = None, None, None, None
+
 def random_vertex(G):
     """ 
     Return a random vertex from G.
@@ -68,40 +72,48 @@ def betweenness_vaccination(G, population, v):
     Vaccinate v individuals from the population, in reverse order 
     of betweenness centrality.
     """
-    L = sorted(networkx.betweenness_centrality(G).items(), 
-               key = operator.itemgetter(1), reverse = True)
+    global BET
+    if BET == None:
+        BET = sorted(networkx.betweenness_centrality(G).items(), 
+                     key = operator.itemgetter(1), reverse = True)
     for i in range(v):
-        population[L[i][0]] = VACCINATED
+        population[BET[i][0]] = VACCINATED
 
 def closeness_vaccination(G, population, v):
     """
     Vaccinate v individuals from the population, in reverse order 
     of closeness centrality.
     """
-    L = sorted(networkx.closeness_centrality(G).items(), 
-               key = operator.itemgetter(1), reverse = True)
+    global CLO
+    if CLO == None:
+        CLO = sorted(networkx.closeness_centrality(G).items(), 
+                     key = operator.itemgetter(1), reverse = True)
     for i in range(v):
-        population[L[i][0]] = VACCINATED
+        population[CLO[i][0]] = VACCINATED
 
 def degree_vaccination(G, population, v):
     """
     Vaccinate v individuals from the population, in reverse order 
     of degree centrality.
     """
-    L = sorted(networkx.degree_centrality(G).items(), 
-               key = operator.itemgetter(1), reverse = True)
+    global DEG
+    if DEG == None:
+        DEG = sorted(networkx.degree_centrality(G).items(), 
+                     key = operator.itemgetter(1), reverse = True)
     for i in range(v):
-        population[L[i][0]] = VACCINATED
+        population[DEG[i][0]] = VACCINATED
 
 def eigenvector_vaccination(G, population, v):
     """
     Vaccinate v individuals from the population, in reverse order 
     of eigenvector centrality.
     """
-    L = sorted(networkx.eigenvector_centrality(G).items(), 
-               key = operator.itemgetter(1), reverse = True)
+    global EIG
+    if EIG == None:
+        EIG = sorted(networkx.eigenvector_centrality(G).items(), 
+                     key = operator.itemgetter(1), reverse = True)
     for i in range(v):
-        population[L[i][0]] = VACCINATED
+        population[EIG[i][0]] = VACCINATED
 
 def infection_probability(G, population, i, beta):
     """
