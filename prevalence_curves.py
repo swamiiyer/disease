@@ -88,7 +88,8 @@ def main(args):
     plt.xlabel(r"strategy", fontproperties = font_prop)
     plt.ylabel(r"$v^\star$", fontproperties = font_prop)
 
-    plt.savefig("%s_prevalence_curves.pdf" %(prefix), format = "pdf", bbox_inches = "tight")
+    plt.savefig("%s_prevalence_curves.pdf" %(prefix), format = "pdf", 
+                bbox_inches = "tight")
     plt.close(1)
 
 if __name__ == "__main__":
