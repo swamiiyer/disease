@@ -53,6 +53,27 @@ def random_walk_vaccination(G, population, v):
         else:
             p = random_neighbor(Gsub, p)
 
+def page_rank_vaccination(G, population, v, r = 0.9):
+    """
+    Vaccinate v individuals from the population, by performing a 
+    random walk on G, starting at a random vertex as the current individual, 
+    and using the 90-10 rule: with probability r vaccinate a random neighbor 
+    of the current individual, and with probability 1 - r vaccinate a random 
+    individual from the population and continue the random walk from the 
+    corresponding vertex.
+    """
+    count = 0
+    p = random_vertex(G)
+    while count < v:
+        if population[p] != VACCINATED:
+            population[p] = VACCINATED
+            count += 1
+        else:
+            if random.random() < r:
+                p = random_neighbor(G, p)
+            else:
+                p = random_vertex(G)
+
 def referral_vaccination(G, population, v):
     """
     Vaccinate v individuals from the population, by referral.
@@ -157,7 +178,11 @@ def single_trial(G, params):
         strategy = params["vaccination"]["strategy"]
         v = int(params["vaccination"]["fraction"] * n)
         vaccination = getattr(disease, strategy)
-        vaccination(G, population, v)
+        if strategy == "page_rank_vaccination":
+            r = float(params["vaccination"]["r"])
+            vaccination(G, population, v, r)
+        else:
+            vaccination(G, population, v)
 
     # Infect one susceptible individual at random. 
     while True:
@@ -209,11 +234,10 @@ def main(args):
 
     # Setup the network.
     if network_params["name"] == "read_graphml":
-        G = networkx.convert_node_labels_to_integers(\
-            networkx.read_graphml(network_params["args"]["path"]))
+        G = networkx.read_graphml(network_params["args"]["path"])
+        G = networkx.convert_node_labels_to_integers(G)
     else:
-        G = getattr(networkx, \
-                        network_params["name"])(**network_params["args"])
+        G = getattr(networkx, network_params["name"])(**network_params["args"])
 
     # Carry out the requested number of trials of the disease dynamics and 
     # compute basic statistics of the results.

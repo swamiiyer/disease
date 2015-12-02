@@ -22,9 +22,9 @@ output, prints the time-evolution of the `s`, `i`, `r` values.
 
 `params.json.sample`: Sample parameter file. The allowed vaccination 
 strategies are: `random_vaccination`, `random_walk_vaccination`, 
-`referral_vaccination`, `betweenness_vaccination`, `closeness_vaccination`, 
-`degree_vaccination`, and `eigenvector_vaccination`. For the allowed 
-network parameters, consult [https://github.com/swamiiyer/network].
+`page_rank_vaccination`, `referral_vaccination`, `betweenness_vaccination`, 
+`closeness_vaccination`, `degree_vaccination`, and `eigenvector_vaccination`. 
+For the allowed network parameters, consult [https://github.com/swamiiyer/network].
 
 `sir_curves.py`: This script plots the s-i-r curves from the results produced 
 by `disease_verbose.py` (fed via `STDIN`) and saves the plot in a file called 
@@ -36,9 +36,17 @@ of the result files are fed via `STDIN`) and saves the plot in a file called
 `prevalence.pdf`. The script also calculates and prints the `P-index` value and 
 the critical vaccination threshold value, `vstar`.
 
+`gr_network.py`: This script generates an exponential (growing random) 
+network with `n` vertices and mean degree `k`, and saves it in graphml format.
+
+```bash
+> python gr_network.py <n> <k>
+```
+
 ## Software Dependencies
 
 * [Python](https://www.python.org/) (2.7.6)
+* [igraph](http://igraph.org/) (0.6.5)
 * [NetworkX](https://networkx.github.io/) (1.8.1)
 * [NumPy](http://www.numpy.org/) (1.8.2)
 * [Pandas](http://pandas.pydata.org/) (0.13.1)
