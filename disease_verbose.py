@@ -178,7 +178,7 @@ def single_trial(G, params):
         strategy = params["vaccination"]["strategy"]
         v = int(params["vaccination"]["fraction"] * n)
         vaccination = getattr(disease, strategy)
-        if strategy == "page_rank_vaccination":
+        if strategy == "page_rank_vaccination" and "r" in params["vaccination"]:
             r = float(params["vaccination"]["r"])
             vaccination(G, population, v, r)
         else:
