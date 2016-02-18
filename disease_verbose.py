@@ -131,7 +131,8 @@ def eigenvector_vaccination(G, population, v):
     """
     global EIG
     if EIG == None:
-        EIG = sorted(networkx.eigenvector_centrality(G).items(), 
+        EIG = sorted(networkx.eigenvector_centrality(G, 
+                                                     max_iter = 1000).items(), 
                      key = operator.itemgetter(1), reverse = True)
     for i in range(v):
         population[EIG[i][0]] = VACCINATED
