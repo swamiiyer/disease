@@ -24,7 +24,7 @@ output, prints the time-evolution of the `s`, `i`, `r` values.
 strategies are: `random_vaccination`, `random_walk_vaccination`, 
 `page_rank_vaccination`, `referral_vaccination`, `betweenness_vaccination`, 
 `closeness_vaccination`, `degree_vaccination`, and `eigenvector_vaccination`. 
-For the allowed network parameters, consult [https://github.com/swamiiyer/network].
+For the allowed network parameters, consult [this page](https://github.com/swamiiyer/network).
 
 `sir_curves.py`: This script plots the s-i-r curves from the results produced 
 by `disease_verbose.py` (fed via `STDIN`) and saves the plot in a file called 
@@ -45,12 +45,12 @@ network with `n` vertices and mean degree `k`, and saves it in graphml format.
 
 ## Software Dependencies
 
-* [Python](https://www.python.org/) (2.7.6)
-* [igraph](http://igraph.org/) (0.6.5)
-* [NetworkX](https://networkx.github.io/) (1.8.1)
-* [NumPy](http://www.numpy.org/) (1.8.2)
-* [Pandas](http://pandas.pydata.org/) (0.13.1)
-* [Matplotlib](http://matplotlib.org/) (1.3.1)
+* [Python](https://www.python.org/)
+* [igraph](http://igraph.org/)
+* [NetworkX](https://networkx.github.io/)
+* [NumPy](http://www.numpy.org/)
+* [Pandas](http://pandas.pydata.org/)
+* [Matplotlib](http://matplotlib.org/)
 
 ## Contact
 
