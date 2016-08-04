@@ -2,7 +2,9 @@
     "trials" : 100, 
     "beta"  : 0.08, 
     "gamma" : 0.075, 
-    "vaccination" : {"strategy" : "random_vaccination", "fraction" : 0.1}, 
-    "network_params" : {"name" : "barabasi_albert_graph", 
-                        "args" : {"n" : 10000, "m" : 5}}
+    "vaccination" : {"strategy"      : "degree_vaccination",
+                     "fraction"      : 0,
+                     "is_sequential" : false}, 
+    "network_params" : {"name" : "read_graphml", 
+                        "args" : {"path" : "ba_6.graphml"}}
 }

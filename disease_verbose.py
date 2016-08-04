@@ -1,14 +1,10 @@
-import disease, json, networkx, numpy, operator, random, sys
+import disease, json, networkx, numpy, operator, pickle, random, sys
 
 # Each individual in the population belongs to one of the following states.
 SUSCEPTIBLE = 0
 INFECTED = 1
 RECOVERED = 2
 VACCINATED = 3
-
-# Memoize betweenness, closeness, degree, and eigenvector centrality
-# calculations
-BET, CLO, DEG, EIG = None, None, None, None
 
 def random_vertex(G):
     """ 
@@ -29,14 +25,14 @@ def random_neighbor(G, i):
     l = neighbors(G, i)
     return random.choice(l) if len(l) > 0 else None
 
-def random_vaccination(G, population, v):
+def random_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, at random.
     """
     for p in random.sample(range(len(G)), v):
         population[p] = VACCINATED
 
-def random_walk_vaccination(G, population, v):
+def random_walk_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate min(n, v) individuals from the population, by performing a 
     random walk on the largest component (size n) of the graph G, starting 
@@ -53,28 +49,7 @@ def random_walk_vaccination(G, population, v):
         else:
             p = random_neighbor(Gsub, p)
 
-def page_rank_vaccination(G, population, v, r = 0.9):
-    """
-    Vaccinate v individuals from the population, by performing a 
-    random walk on G, starting at a random vertex as the current individual, 
-    and using the 90-10 rule: with probability r vaccinate a random neighbor 
-    of the current individual, and with probability 1 - r vaccinate a random 
-    individual from the population and continue the random walk from the 
-    corresponding vertex.
-    """
-    count = 0
-    p = random_vertex(G)
-    while count < v:
-        if population[p] != VACCINATED:
-            population[p] = VACCINATED
-            count += 1
-        else:
-            if random.random() < r:
-                p = random_neighbor(G, p)
-            else:
-                p = random_vertex(G)
-
-def referral_vaccination(G, population, v):
+def referral_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, by referral.
     """
@@ -88,54 +63,45 @@ def referral_vaccination(G, population, v):
             population[q] = VACCINATED
             count += 1
 
-def betweenness_vaccination(G, population, v):
+def betweenness_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of betweenness centrality.
     """
-    global BET
-    if BET == None:
-        BET = sorted(networkx.betweenness_centrality(G).items(), 
-                     key = operator.itemgetter(1), reverse = True)
+    BET = attack_sequences["BET_SEQ"] if is_sequential \
+          else attack_sequences["BET_SIM"]
     for i in range(v):
-        population[BET[i][0]] = VACCINATED
+        population[BET[i]] = VACCINATED
 
-def closeness_vaccination(G, population, v):
+def closeness_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of closeness centrality.
     """
-    global CLO
-    if CLO == None:
-        CLO = sorted(networkx.closeness_centrality(G).items(), 
-                     key = operator.itemgetter(1), reverse = True)
+    CLO = attack_sequences["CLO_SEQ"] if is_sequential \
+          else attack_sequences["CLO_SIM"]
     for i in range(v):
-        population[CLO[i][0]] = VACCINATED
+        population[CLO[i]] = VACCINATED
 
-def degree_vaccination(G, population, v):
+def degree_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of degree centrality.
     """
-    global DEG
-    if DEG == None:
-        DEG = sorted(networkx.degree_centrality(G).items(), 
-                     key = operator.itemgetter(1), reverse = True)
+    DEG = attack_sequences["DEG_SEQ"] if is_sequential \
+          else attack_sequences["DEG_SIM"]
     for i in range(v):
-        population[DEG[i][0]] = VACCINATED
+        population[DEG[i]] = VACCINATED
 
-def eigenvector_vaccination(G, population, v):
+def eigenvector_vaccination(G, population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of eigenvector centrality.
     """
-    global EIG
-    if EIG == None:
-        EIG = sorted(networkx.eigenvector_centrality(G, 
-                                                     max_iter = 1000).items(), 
-                     key = operator.itemgetter(1), reverse = True)
+    EIG = attack_sequences["EIG_SEQ"] if is_sequential \
+          else attack_sequences["EIG_SIM"]
     for i in range(v):
-        population[EIG[i][0]] = VACCINATED
+        population[EIG[i]] = VACCINATED
 
 def infection_probability(G, population, i, beta):
     """
@@ -158,7 +124,7 @@ def extend(a, b):
         b = numpy.append(b, [b[-1]] * (a_size - b_size))
     return a, b
 
-def single_trial(G, params):
+def single_trial(G, params, attack_sequences):
     """
     Carry out a single trial of the disease dynamics and return three lists 
     containing the fraction of susceptible, infected, and recovered 
@@ -179,11 +145,8 @@ def single_trial(G, params):
         strategy = params["vaccination"]["strategy"]
         v = int(params["vaccination"]["fraction"] * n)
         vaccination = getattr(disease, strategy)
-        if strategy == "page_rank_vaccination" and "r" in params["vaccination"]:
-            r = float(params["vaccination"]["r"])
-            vaccination(G, population, v, r)
-        else:
-            vaccination(G, population, v)
+        is_sequential = params["vaccination"]["is_sequential"]
+        vaccination(G, population, v, attack_sequences, is_sequential)
 
     # Infect one susceptible individual at random. 
     while True:
@@ -234,17 +197,18 @@ def main(args):
     network_params = params["network_params"]
 
     # Setup the network.
-    if network_params["name"] == "read_graphml":
-        G = networkx.read_graphml(network_params["args"]["path"])
-        G = networkx.convert_node_labels_to_integers(G)
-    else:
-        G = getattr(networkx, network_params["name"])(**network_params["args"])
+    G = networkx.read_graphml(network_params["args"]["path"])
+    G = networkx.convert_node_labels_to_integers(G)
+
+    # Load the attack sequences.
+    fname = network_params["args"]["path"].replace(".graphml", ".pkl")
+    attack_sequences = pickle.load(open(fname, "rb"))
 
     # Carry out the requested number of trials of the disease dynamics and 
     # compute basic statistics of the results.
     Sm, Im, Rm = numpy.array([0.0]), numpy.array([0.0]), numpy.array([0.0])
     for t in range(1, params["trials"] + 1):
-        S, I, R = single_trial(G, params)
+        S, I, R = single_trial(G, params, attack_sequences)
         Sm, S = extend(Sm, S)
         Im, I = extend(Im, I)
         Rm, R = extend(Rm, R)
