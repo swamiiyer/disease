@@ -1,3 +1,12 @@
+"""
+Usage: python %(script_name)s <params file>
+
+This script simulates disease dynamics on complex networks using the 
+parameters specified in <params file>, and prints the final fractions 
+(s, i, and r) of the susceptible, intected, and recovered individuals, 
+along with the standard deviation of r.
+"""
+
 import disease, json, networkx, numpy, operator, pickle, random, sys
 
 # Each individual in the population belongs to one of the following states.
@@ -25,45 +34,32 @@ def random_neighbor(G, i):
     l = neighbors(G, i)
     return random.choice(l) if len(l) > 0 else None
 
-def random_vaccination(G, population, v, attack_sequences, is_sequential):
+def random_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, at random.
     """
-    for p in random.sample(range(len(G)), v):
+    for p in random.sample(range(len(population)), v):
         population[p] = VACCINATED
 
-def random_walk_vaccination(G, population, v, attack_sequences, is_sequential):
+def random_walk_vaccination(population, v, attack_sequences, is_sequential):
     """
-    Vaccinate min(n, v) individuals from the population, by performing a 
-    random walk on the largest component (size n) of the graph G, starting 
-    at a random vertex.
+    Vaccinate v individuals from the population, by random walk.
     """
-    Gsub = networkx.connected_component_subgraphs(G).next()
-    v = min(len(Gsub), v)
-    count = 0
-    p = random_vertex(Gsub)
-    while count < v:
-        if population[p] != VACCINATED:
-            population[p] = VACCINATED
-            count += 1
-        else:
-            p = random_neighbor(Gsub, p)
+    RWK = attack_sequences["RWK_SEQ"] if is_sequential \
+          else attack_sequences["RWK_SIM"]
+    for i in range(v):
+        population[RWK[i]] = VACCINATED
 
-def referral_vaccination(G, population, v, attack_sequences, is_sequential):
+def referral_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, by referral.
     """
-    count = 0
-    while count < v:
-        p = random_vertex(G)
-        q = random_neighbor(G, p)
-        if q == None:
-            continue
-        if population[q] != VACCINATED:
-            population[q] = VACCINATED
-            count += 1
+    REF = attack_sequences["REF_SEQ"] if is_sequential \
+          else attack_sequences["REF_SIM"]
+    for i in range(v):
+        population[REF[i]] = VACCINATED
 
-def betweenness_vaccination(G, population, v, attack_sequences, is_sequential):
+def betweenness_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of betweenness centrality.
@@ -73,7 +69,7 @@ def betweenness_vaccination(G, population, v, attack_sequences, is_sequential):
     for i in range(v):
         population[BET[i]] = VACCINATED
 
-def closeness_vaccination(G, population, v, attack_sequences, is_sequential):
+def closeness_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of closeness centrality.
@@ -83,7 +79,7 @@ def closeness_vaccination(G, population, v, attack_sequences, is_sequential):
     for i in range(v):
         population[CLO[i]] = VACCINATED
 
-def degree_vaccination(G, population, v, attack_sequences, is_sequential):
+def degree_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of degree centrality.
@@ -93,7 +89,7 @@ def degree_vaccination(G, population, v, attack_sequences, is_sequential):
     for i in range(v):
         population[DEG[i]] = VACCINATED
 
-def eigenvector_vaccination(G, population, v, attack_sequences, is_sequential):
+def eigenvector_vaccination(population, v, attack_sequences, is_sequential):
     """
     Vaccinate v individuals from the population, in reverse order 
     of eigenvector centrality.
@@ -108,13 +104,15 @@ def infection_probability(G, population, i, beta):
     Return the probability that the specified individual i will be infected 
     by one of its infected neighbors.
     """
-    infected_neighbors = numpy.in1d(population[neighbors(G, i)], INFECTED).sum()
+    infected_neighbors = numpy.in1d(population[neighbors(G, i)],
+                                    INFECTED).sum()
     return 1 - (1 - beta) ** infected_neighbors
 
 def single_trial(G, params, attack_sequences):
     """
-    Carry out a single trial of the disease dynamics and return the fraction 
-    of susceptible, infected, and recovered individuals at the last time step.
+    Carry out a single trial of the disease dynamics and return the 
+    fraction of susceptible, infected, and recovered individuals at the 
+    last time step.
     """
 
     # Pick a random value from (0, 1) for beta and gamma if they are None.
@@ -132,7 +130,7 @@ def single_trial(G, params, attack_sequences):
         v = int(params["vaccination"]["fraction"] * n)
         vaccination = getattr(disease, strategy)
         is_sequential = params["vaccination"]["is_sequential"]
-        vaccination(G, population, v, attack_sequences, is_sequential)
+        vaccination(population, v, attack_sequences, is_sequential)
 
     # Infect one susceptible individual at random. 
     while True:
@@ -168,12 +166,11 @@ def main(args):
     """
     Entry point.
     """
-    if len(args) == 0:
-        print "Usage: python disease.py <params file>"
-        sys.exit(1)
+    if len(args) != 2:
+        sys.exit(__doc__ %{"script_name" : args[0].split("/")[-1]})
 
     # Load the simulation parameters.
-    params = json.load((open(args[0], "r")))
+    params = json.load((open(args[1], "r")))
     network_params = params["network_params"]
 
     # Setup the network.
@@ -200,4 +197,4 @@ def main(args):
           %(Sm, Im, Rm, (Rv / params["trials"]) ** 0.5))
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main(sys.argv)
